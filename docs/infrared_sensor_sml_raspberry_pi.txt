@@ -1,0 +1,28 @@
+sudo apt install minicom
+
+sudo minicom -s
+
+Serial port setup -> 
+    | A -    Serial Device      : /dev/ttyUSB0                              | 
+    | B - Lockfile Location     : /var/lock                                 |
+    | C -   Callin Program      :                                           |
+    | D -  Callout Program      :                                           |
+    | E -    Bps/Par/Bits       : 9600 8N1                                  |
+    | F - Hardware Flow Control : Yes                                       |
+    | G - Software Flow Control : No    
+
+
+sudo stty -F /dev/ttyUSB0 1:0:8bd:0:3:1c:7f:15:4:5:1:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
+--> some requested operations cannot be performerd, but it still works
+
+sudo cat /dev/ttyUSB0 | od -tx1
+
+sudo usermod -a -G dialout $USER
+cat /dev/ttyUSB0 | od -tx1
+
+
+
+https://wiki.volkszaehler.org/hardware/controllers/ir-schreib-lesekopf-usb-ausgang
+
+
+
