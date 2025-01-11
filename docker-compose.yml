@@ -1,0 +1,8 @@
+services:
+  iskra-electricity-server:
+    image: iskra-electricity-server
+    restart: unless-stopped
+    ports:
+      - "18080:8080"
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
