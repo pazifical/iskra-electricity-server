@@ -38,5 +38,8 @@ func (ies *IskraElectricityServer) getCurrentReading(w http.ResponseWriter, r *h
 }
 
 func (ies *IskraElectricityServer) Start() error {
+	go ies.monitor.Start()
+
+	log.Printf("INFO: staring server on port %d", ies.port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", ies.port), ies.mux)
 }

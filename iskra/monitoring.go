@@ -24,7 +24,7 @@ func NewElectricityMonitor(readoutInterval int) ElectricityMonitor {
 }
 
 func (em *ElectricityMonitor) Start() {
-	fmt.Println("ElectricityTotal meter readout and processing.")
+	log.Println("INFO: staring energy monitoring service")
 
 	configureSerialPort()
 
