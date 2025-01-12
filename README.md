@@ -6,7 +6,7 @@ This endpoint can then be used to add a custom [RESTful Sensor](https://www.home
 
 ## Demo
 
-![schema](docs/setup.png)
+![schema](docs/schema.png)
 
 TODO: describe the setup
 
