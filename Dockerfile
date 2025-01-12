@@ -5,8 +5,10 @@ WORKDIR /workdir
 COPY go.mod .
 
 COPY iskra iskra
+COPY sml sml
 COPY internal internal
 COPY main.go .
+
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o iskra-electricity-server .
 
