@@ -2,11 +2,12 @@ package iskra
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"time"
 
+	"github.com/pazifical/iskra-electricity-server/internal/logging"
 	"github.com/pazifical/iskra-electricity-server/internal/types"
+	"github.com/pazifical/iskra-electricity-server/sml"
 )
 
 // Values over this value are really unlikely and wont be sent to the database
@@ -15,6 +16,7 @@ const maxValKWh = 100000
 type ElectricityMonitor struct {
 	CurrentReading  types.EnergyReading
 	readoutInterval int
+	currentError    error
 }
 
 func NewElectricityMonitor(readoutInterval int) ElectricityMonitor {
@@ -24,49 +26,51 @@ func NewElectricityMonitor(readoutInterval int) ElectricityMonitor {
 }
 
 func (em *ElectricityMonitor) Start() {
-	log.Println("INFO: staring energy monitoring service")
+	logging.Info("staring energy monitoring service")
 
-	configureSerialPort()
+	for {
+		err := configureSerialPort()
+		if err != nil {
+			logging.Error(err.Error())
+		} else {
+			break
+		}
+		time.Sleep(time.Second * 10)
+	}
 
 	sleepTime := time.Duration(em.readoutInterval * 1000000000)
 	for {
-		// Reading out the sensor
 		sensorReadout, ok := readoutSensor()
 		if !ok {
-			log.Printf("INFO: Sleeping for %v minutes.", sleepTime.Minutes())
+			logging.Info(fmt.Sprintf("sleeping for %v minutes.", sleepTime.Minutes()))
 			time.Sleep(sleepTime)
 			continue
 		}
 
-		// Processing the readout to get the energy consumption
-		// preprocessedReadout := preProcessReadout(sensorReadout)
-		// reading, ok := extractConsumptionFromReadout(preprocessedReadout)
-		reading, err := ParseSML(sensorReadout)
-
+		reading, err := sml.ParseSensorReadout(sensorReadout)
 		if err != nil {
-			reading = types.EnergyReading{Error: err}
+			reading = types.EnergyReading{}
+			em.currentError = err
 			continue
 		}
 
-		log.Println("Energy reading:", reading)
+		logging.Info(fmt.Sprintf("energy reading: %v", reading))
 		if reading.Value < maxValKWh {
 			em.CurrentReading = reading
 		} else {
-			reading.Error = fmt.Errorf("reading (%f) > max value (%d)", reading.Value, maxValKWh)
-			em.CurrentReading = reading
-			log.Printf("ERROR: %f exceeds the max value %d", reading.Value, maxValKWh)
+			em.currentError = fmt.Errorf("reading (%f) > max value (%d)", reading.Value, maxValKWh)
+			logging.Error(fmt.Sprintf("%f exceeds the max value %d", reading.Value, maxValKWh))
 		}
 
-		// Sleeping for the given time period
-		log.Printf("INFO: Sleeping for %v minutes.\n", sleepTime.Minutes())
+		logging.Info(fmt.Sprintf("sleeping for %v minutes.\n", sleepTime.Minutes()))
 		time.Sleep(sleepTime)
 	}
 }
 
 // Configures the serial port so that a readout is possible.
 // The configuration is necessary after a system reboot
-func configureSerialPort() {
-	log.Println("INFO: Trying to configure serial port...")
+func configureSerialPort() error {
+	logging.Info("trying to configure serial port")
 
 	out, err := exec.Command(
 		"stty",
@@ -75,8 +79,10 @@ func configureSerialPort() {
 		"1:0:8bd:0:3:1c:7f:15:4:5:1:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0",
 	).Output()
 
+	logging.Debug(string(out))
+
 	if err != nil {
-		log.Printf("ERROR: Cannot configure serial port: %s", err)
+		return fmt.Errorf("cannot configure serial port: %v", err)
 	}
-	log.Println(out)
+	return nil
 }

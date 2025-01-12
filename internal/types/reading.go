@@ -15,11 +15,4 @@ type EnergyReading struct {
 	Type  EnergyType `json:"type"`
 	Unit  string     `json:"unit"`
 	Value float64    `json:"value"`
-	Error error      `json:"error"`
-}
-
-type MultipleEnergyReadings struct {
-	EnergyReadings []EnergyReading `json:"energy_readings"`
-	Unit           string          `json:"unit"`
-	Error          error           `json:"error"`
 }

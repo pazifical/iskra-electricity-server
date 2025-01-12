@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/pazifical/iskra-electricity-server/internal"
+	"github.com/pazifical/iskra-electricity-server/internal/logging"
 	"github.com/pazifical/iskra-electricity-server/iskra"
 )
 
@@ -13,6 +14,8 @@ var readoutInterval = 60
 var port = 8080
 
 func init() {
+	logging.LogLevel = logging.InfoLevel
+
 	var err error
 
 	envPort := os.Getenv("IES_PORT")

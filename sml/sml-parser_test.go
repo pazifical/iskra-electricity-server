@@ -1,4 +1,4 @@
-package iskra
+package sml
 
 import (
 	"io/ioutil"

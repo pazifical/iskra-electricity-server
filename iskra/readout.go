@@ -1,9 +1,10 @@
 package iskra
 
 import (
-	"log"
 	"os/exec"
 	"strings"
+
+	"github.com/pazifical/iskra-electricity-server/internal/logging"
 )
 
 // readoutSensor reads from /dev/ttyUSB0 for 10 seconds
@@ -16,19 +17,38 @@ func readoutSensor() (string, bool) {
 
 	// Configuring the piping and how the two commands interact with each other
 	stdoutBuilder := new(strings.Builder)
-	binToHexCmd.Stdin, _ = catSerialCmd.StdoutPipe()
+	var err error
+	binToHexCmd.Stdin, err = catSerialCmd.StdoutPipe()
+	if err != nil {
+		logging.Error(err.Error())
+		return "", false
+	}
+
 	binToHexCmd.Stdout = stdoutBuilder
 
-	// Reading from serial for a set time
-	log.Println("INFO: Starting sensor readout.")
-	_ = binToHexCmd.Start()
-	_ = catSerialCmd.Run()
-	_ = binToHexCmd.Wait()
-	log.Println("INFO: Finished sensor readout.")
+	logging.Info("starting sensor readout")
+	err = binToHexCmd.Start()
+	if err != nil {
+		logging.Error(err.Error())
+		return "", false
+	}
+
+	err = catSerialCmd.Run()
+	if err != nil {
+		logging.Error(err.Error())
+		return "", false
+	}
+	err = binToHexCmd.Wait()
+	if err != nil {
+		logging.Error(err.Error())
+		return "", false
+	}
+
+	logging.Info("finished sensor readout")
 
 	readout := stdoutBuilder.String()
 	if len(readout) == 0 {
-		log.Printf("ERROR: Readout is empty.")
+		logging.Error("readout is empty.")
 		return "", false
 	}
 	return readout, true

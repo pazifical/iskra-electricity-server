@@ -1,4 +1,4 @@
-package iskra
+package sml
 
 import (
 	"encoding/hex"
@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pazifical/iskra-electricity-server/internal/logging"
 	"github.com/pazifical/iskra-electricity-server/internal/types"
 )
 
-func ParseSML(readout string) (types.EnergyReading, error) {
+func ParseSensorReadout(readout string) (types.EnergyReading, error) {
 	slicedReadout := sliceReadout(readout)
 	chunkIndexes := getChunkStartingIndexes(slicedReadout)
 
@@ -21,18 +22,19 @@ func ParseSML(readout string) (types.EnergyReading, error) {
 
 	decimals, ok := processChunk(slicedReadout[chunkIndexes[0]:chunkIndexes[1]])
 	if !ok {
-		log.Printf("ERROR: ParseSML failed for readout: %v", slicedReadout)
+		logging.Error(fmt.Sprintf("ERROR: ParseSML failed for readout: %v", slicedReadout))
 	}
 
-	kwh, err := extractUsageFromArray(decimals)
+	kwhValue, err := extractUsageFromArray(decimals)
 	if err != nil {
 		return types.EnergyReading{}, fmt.Errorf("parsing sml: %w", err)
 	}
+
 	return types.EnergyReading{
 		Type:  types.Electricity,
 		Time:  time.Now(),
 		Unit:  "kWh",
-		Value: kwh,
+		Value: kwhValue,
 	}, nil
 }
 
@@ -56,7 +58,6 @@ func getChunkStartingIndexes(slicedReadout []string) []int {
 
 	for i := 0; i < len(slicedReadout)-7; i++ {
 		joined := strings.Join(slicedReadout[i:(i+8)], " ")
-		// fmt.Println(joined)
 		if joined == chunkStart {
 			chunkStartIndexes = append(chunkStartIndexes, i)
 		}
@@ -137,14 +138,14 @@ func processChunk(chunk []string) ([]int64, bool) {
 func handleIntegerHexBlock(hexVal string, chunk []string) (int64, int, bool) {
 	listLength, err := hexToInt(string(hexVal[1]))
 	if err != nil {
-		fmt.Printf("ERROR: Length problem: %s : %v", hexVal, err)
+		logging.Error(fmt.Sprintf("length problem: %s : %v", hexVal, err))
 		return 0, 0, false
 	}
 	hexNumber := strings.Join(chunk[1:listLength], " ")
 
 	decimal, ok := hexToDecimal(hexNumber)
 	if !ok {
-		fmt.Printf("WARNING: Conversion to decimal does not work: %s", hexNumber)
+		logging.Warning(fmt.Sprintf("conversion to decimal does not work: %s", hexNumber))
 		return 0, listLength, false
 	}
 	return decimal, listLength, true
@@ -153,12 +154,12 @@ func handleIntegerHexBlock(hexVal string, chunk []string) (int64, int, bool) {
 func handleOctatHexBlock(hexVal string, chunk []string) (int, bool) {
 	listLength, err := hexToInt(string(hexVal[1]))
 	if err != nil {
-		fmt.Printf("ERROR: Length problem: %s : %v", hexVal, err)
+		logging.Error(fmt.Sprintf("length problem: %s : %v", hexVal, err))
 		return 0, false
 	}
 
 	if listLength == 0 {
-		fmt.Printf("ERROR: Length problem: List length: %d\n", listLength)
+		logging.Error(fmt.Sprintf("length problem: List length: %d\n", listLength))
 		return 0, false
 	}
 	if listLength == 1 {
@@ -196,12 +197,11 @@ func extractUsageFromArray(decimals []int64) (float64, error) {
 	return 0, fmt.Errorf("cannot extract energy usage from array '%v'", decimals)
 }
 
-// Transforming hex into decimal
 func hexToDecimal(hexValue string) (int64, bool) {
 	hexValueCleaned := strings.Replace(hexValue, " ", "", -1)
 	decimal, err := strconv.ParseInt(hexValueCleaned, 16, 64)
 	if err != nil {
-		log.Println(err)
+		logging.Error(err.Error())
 		return 0, false
 	}
 	return decimal, true
