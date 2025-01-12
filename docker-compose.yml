@@ -1,6 +1,6 @@
 services:
   iskra-electricity-server:
-    image: iskra-electricity-server:0.0.1
+    image: pazifical/iskra-electricity-server:latest
     restart: unless-stopped
     ports:
       - "18080:8080"
