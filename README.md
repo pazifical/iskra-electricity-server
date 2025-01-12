@@ -4,11 +4,15 @@ The **ISKRA Electricity Server** enables you to read out your ISKRA electricity 
 
 This endpoint can then be used to add a custom [RESTful Sensor](https://www.home-assistant.io/integrations/sensor.rest/) in [Home Assistant](https://www.home-assistant.io/) for displaying your energy consumption.
 
-## Demo
+## What is the use case?
+
+The necessity to readout my electricity usage and display it in **Home Assistant** lead to the development of **ISKRA Electricity Server**.
+
+The whole setup is rather **simple** and **reliably** monitors my electricity consumption for several years now.
+
+I'm sure other energy meters also have an IR sensor, so this might be of use as well.
 
 ![schema](docs/schema.png)
-
-TODO: describe the setup
 
 ## Prerequisites
 
@@ -72,4 +76,20 @@ You can grab the `docker-compose.yml`, put it on your server and deploy it via `
 
 ## Usage in Home Assistant
 
-TODO: Write down how to do it
+Add this to your `configuration.yaml`:
+
+```
+rest:
+  - resource: http://<raspberry pi host>/api/electricity/cumulated
+    scan_interval: 60
+
+    sensor:
+      - name: "Electricity cumulated"
+        value_template: "{{ value_json.value }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total
+        unique_id: iskra_electricity_cumulated
+```
+
+Afterwards you can add it in the **Energy** menu to have it plot your electricity consumption.
