@@ -6,14 +6,15 @@ This endpoint can then be used to add a custom [RESTful Sensor](https://www.home
 
 ## Demo
 
-TODO: Add some pictures of the setup here
+![schema](docs/setup.png)
+TODO: describe the setup
 
 ## Prerequisites
 
 For this setup to work
 
 - an ISKRA energy meter with an infrared interface
-- infrared to usb reader 
+- infrared to usb reader
 - a Raspberry Pi (or something similar) with docker installed
 
 This setup was tested with an [ISKRA energy meter](https://lackmann.de/hardware/elektrizitaetszaehler/MT175) and an IR USB reader/writer from [Weidmann Elektronik](https://shop.weidmann-elektronik.de/index.php?page=product&info=24).
@@ -27,19 +28,23 @@ The server (e.g. Raspberry Pi) needs to have **docker** installed. Please follow
 Connect the IR reader to your energy meter (usually magnetic) and your server via USB. It is possible to test the setup like this:
 
 Install minicom:
+
 ```
 sudo apt update
 sudo apt install minicom
 ```
 
 Run minicom:
+
 ```
 sudo minicom -s
 ```
+
 Then you can select **serial port setup**. The output will look something like that:
+
 ```
-Serial port setup -> 
-    | A -    Serial Device      : /dev/ttyUSB0 | 
+Serial port setup ->
+    | A -    Serial Device      : /dev/ttyUSB0 |
     | B - Lockfile Location     : /var/lock    |
     | C -   Callin Program      :              |
     | D -  Callout Program      :              |
@@ -49,17 +54,20 @@ Serial port setup ->
 ```
 
 Configure the device:
+
 ```
 sudo stty -F /dev/ttyUSB0 1:0:8bd:0:3:1c:7f:15:4:5:1:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
 ```
 
 Afterwards you can read out the interface and present it in sml (smart meter language) hex format:
+
 ```
 sudo cat /dev/ttyUSB0 | od -tx1
 ```
+
 ## Deployment
 
-You can grab the ```docker-compose.yml```, put it on your server and deploy it via ```docker compose up -d```.
+You can grab the `docker-compose.yml`, put it on your server and deploy it via `docker compose up -d`.
 
 ## Usage in Home Assistant
 
