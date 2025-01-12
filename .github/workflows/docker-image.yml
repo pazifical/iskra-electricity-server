@@ -26,5 +26,5 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: latest
+        tags: pazifical/iskra-electricity-server:latest
       
